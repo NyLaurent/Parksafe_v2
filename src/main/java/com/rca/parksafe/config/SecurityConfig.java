@@ -15,21 +15,30 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final AuthenticationProvider authenticationProvider;
+        private final JwtAuthenticationFilter jwtAuthFilter;
+        private final AuthenticationProvider authenticationProvider;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(cors -> cors.configurationSource(request -> {
+                                        var corsConfig = new org.springframework.web.cors.CorsConfiguration();
+                                        corsConfig.setAllowedOrigins(java.util.List.of("*"));
+                                        corsConfig.setAllowedMethods(
+                                                        java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                                        corsConfig.setAllowedHeaders(java.util.List.of("*"));
+                                        return corsConfig;
+                                }))
+                                .csrf(csrf -> csrf.disable())
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }
